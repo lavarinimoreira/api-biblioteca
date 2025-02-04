@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routers import books
+from app.routers import books, users
 
 
 app = FastAPI()
@@ -10,3 +10,4 @@ def health_check():
 
 
 app.include_router(books.router)
+app.include_router(users.router)
