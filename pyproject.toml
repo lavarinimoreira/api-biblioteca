@@ -1,0 +1,32 @@
+[project]
+name = "biblioteca"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Gabriel Moreira",email = "lavarinimoreira@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi (>=0.115.8,<0.116.0)",
+    "uvicorn (>=0.34.0,<0.35.0)",
+    "sqlalchemy (>=2.0.37,<3.0.0)",
+    "asyncpg (>=0.30.0,<0.31.0)",
+    "sqlalchemy[asyncio] (>=2.0.37,<3.0.0)",
+    "alembic (>=1.14.1,<2.0.0)",
+    "pytest-asyncio (>=0.25.3,<0.26.0)",
+    "pytest (>=8.3.4,<9.0.0)",
+    "httpx (>=0.28.1,<0.29.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.4"
+pytest-asyncio = "^0.25.3"
+httpx = "^0.28.1"
+aiosqlite = "^0.21.0"
+
