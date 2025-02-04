@@ -1,9 +1,19 @@
 # Tabelas
 from app.database import Base
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Table
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
+
+
+
+# Tabela de associação para o relacionamento muitos-para-muitos entre GrupoPolitica e Permissao
+grupo_politica_permissao = Table(
+    'grupo_politica_permissao',
+    Base.metadata,
+    Column('grupo_politica_id', Integer, ForeignKey('grupo_politica.id'), primary_key=True),
+    Column('permissao_id', Integer, ForeignKey('permissao.id'), primary_key=True)
+)
+
 
 class Usuario(Base):
     __tablename__ = 'usuario'
@@ -13,10 +23,35 @@ class Usuario(Base):
     telefone = Column(String(15))
     endereco_completo = Column(String(200))
     senha_hash = Column(String(255), nullable=False)
-    grupo_politica = Column(String(50))
+    grupo_politica_id = Column(Integer, ForeignKey('grupo_politica.id'))
     data_criacao = Column(DateTime, default=func.now())
     data_atualizacao = Column(DateTime, default=func.now(), onupdate=func.now())
+
+    grupo_politica = relationship("GrupoPolitica", back_populates="usuarios")
     emprestimos = relationship("Emprestimo", back_populates="usuario")
+
+
+class GrupoPolitica(Base):
+    __tablename__ = 'grupo_politica'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    nome = Column(String(100), nullable=False, unique=True)
+    data_criacao = Column(DateTime, default=func.now())
+    data_atualizacao = Column(DateTime, default=func.now(), onupdate=func.now())
+
+    usuarios = relationship("Usuario", back_populates="grupo_politica")
+    permissoes = relationship("Permissao", secondary=grupo_politica_permissao, back_populates="grupos_politica")
+
+class Permissao(Base):
+    __tablename__ = 'permissao'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    nome = Column(String(100), nullable=False, unique=True)
+    descricao = Column(String(255))
+    namespace = Column(String(100))
+    data_criacao = Column(DateTime, default=func.now())
+    data_atualizacao = Column(DateTime, default=func.now(), onupdate=func.now())
+
+    grupos_politica = relationship("GrupoPolitica", secondary=grupo_politica_permissao, back_populates="permissoes")
+
 
 class Livro(Base):
     __tablename__ = 'livro'
