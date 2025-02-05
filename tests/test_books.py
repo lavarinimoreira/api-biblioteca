@@ -7,7 +7,7 @@ CREATE tests
 """
 @pytest.mark.asyncio
 async def test_create_livro(client):
-    response = await client.post("/livro/create/", json={
+    response = await client.post("/livros/create/", json={
         "titulo": "O Hobbit",
         "autor": "J.R.R. Tolkien",
         "genero": "Fantasia",
@@ -29,7 +29,7 @@ from fastapi import status
 
 @pytest.mark.asyncio
 async def test_create_livro_quantidade_negativa(client):
-    response = await client.post("/livro/create/", json={
+    response = await client.post("/livros/create/", json={
         "titulo": "Livro com Quantidade Negativa",
         "autor": "Autor Teste",
         "genero": "Ficção",
@@ -56,7 +56,7 @@ READ tests
 @pytest.mark.asyncio
 async def test_read_livros(client):
     # Primeiro, cria um livro para garantir que temos algo no banco
-    await client.post("/livro/create/", json={
+    await client.post("/livros/create/", json={
         "titulo": "Dom Quixote",
         "autor": "Miguel de Cervantes",
         "genero": "Distopia",
@@ -68,7 +68,7 @@ async def test_read_livros(client):
     })
 
     # Agora testa o GET /livros
-    response = await client.get("/livro")
+    response = await client.get("/livros/")
     
     assert response.status_code == status.HTTP_200_OK
     livros = response.json()
@@ -87,7 +87,7 @@ UPDATE tests
 @pytest.mark.asyncio
 async def test_update_livro(client):
     # Criação do livro
-    create_response = await client.post("/livro/create/", json={
+    create_response = await client.post("/livros/create/", json={
         "titulo": "1984",
         "autor": "George Orwell",
         "genero": "Distopia",
@@ -103,11 +103,11 @@ async def test_update_livro(client):
     livro_id = livro_criado["id"]
 
     # Verificar se o livro existe após criação
-    get_response = await client.get(f"/livro/{livro_id}")
+    get_response = await client.get(f"/livros/{livro_id}")
     assert get_response.status_code == status.HTTP_200_OK, f"Livro não encontrado após criação: {get_response.json()}"
 
     # Atualizar o livro (rota atualizada para '/livro/update/{livro_id}')
-    update_response = await client.put(f"/livro/update/{livro_id}", json={
+    update_response = await client.put(f"/livros/update/{livro_id}", json={
         "titulo": "1984 - Edição Atualizada",
         "quantidade_disponivel": 10
     })
@@ -131,7 +131,7 @@ DELETE tests
 @pytest.mark.asyncio
 async def test_delete_livro(client):
     # Primeiro, cria um livro para poder deletá-lo
-    create_response = await client.post("/livro/create/", json={
+    create_response = await client.post("/livros/create/", json={
         "titulo": "Livro para Deletar",
         "autor": "Autor Teste",
         "genero": "Teste",
@@ -147,9 +147,9 @@ async def test_delete_livro(client):
     livro_id = livro_criado["id"]
 
     # Agora deleta o livro criado
-    delete_response = await client.delete(f"/livro/delete/{livro_id}")
+    delete_response = await client.delete(f"/livros/delete/{livro_id}")
     assert delete_response.status_code == status.HTTP_204_NO_CONTENT
 
     # Tenta buscar o livro deletado para garantir que ele foi removido
-    get_response = await client.get(f"/livro/{livro_id}")
+    get_response = await client.get(f"/livros/{livro_id}")
     assert get_response.status_code == status.HTTP_404_NOT_FOUND

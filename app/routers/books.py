@@ -7,13 +7,13 @@ from app.database import get_db
 from app.models.models import Livro
 from app.schemas.book import LivroCreate, LivroRead, LivroUpdate
 
-router = APIRouter()
+router = APIRouter(prefix="/livros", tags=["Livros"])
 
 
 """---------------------------------------------------------------------------
 CREATE routers
 """
-@router.post("/livro/create/", status_code=status.HTTP_201_CREATED, response_model=LivroRead)
+@router.post("/create/", status_code=status.HTTP_201_CREATED, response_model=LivroRead)
 async def create_livro(livro: LivroCreate, db: AsyncSession = Depends(get_db)):
     db_livro = Livro(
         titulo=livro.titulo,
@@ -37,14 +37,14 @@ async def create_livro(livro: LivroCreate, db: AsyncSession = Depends(get_db)):
 """---------------------------------------------------------------------------
 READ routers
 """
-@router.get("/livro", status_code=status.HTTP_200_OK, response_model=list[LivroRead])
+@router.get("/", status_code=status.HTTP_200_OK, response_model=list[LivroRead])
 async def read_livros(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Livro))
     livros = result.scalars().all()
     return livros
 
 
-@router.get("/livro/{livro_id}", response_model=LivroRead, status_code=status.HTTP_200_OK)
+@router.get("/{livro_id}", response_model=LivroRead, status_code=status.HTTP_200_OK)
 async def get_livro(livro_id: int, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Livro).where(Livro.id == livro_id))
     livro = result.scalars().first()
@@ -57,7 +57,7 @@ async def get_livro(livro_id: int, db: AsyncSession = Depends(get_db)):
 """---------------------------------------------------------------------------
 UPDATE routers
 """
-@router.put("/livro/update/{livro_id}", response_model=LivroRead)
+@router.put("/update/{livro_id}", response_model=LivroRead)
 async def atualizar_livro(livro_id: int, livro_update: LivroUpdate = Body(...), db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Livro).where(Livro.id == livro_id))
     livro = result.scalars().first()
@@ -78,7 +78,7 @@ async def atualizar_livro(livro_id: int, livro_update: LivroUpdate = Body(...), 
 """---------------------------------------------------------------------------
 DELETE routers
 """
-@router.delete("/livro/delete/{livro_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/delete/{livro_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def deletar_livro(livro_id: int, db: AsyncSession = Depends(get_db)):
     # Verificar se o livro existe
     result = await db.execute(select(Livro).where(Livro.id == livro_id))
