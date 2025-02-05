@@ -7,7 +7,7 @@ import asyncio
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
-from app.models.models import Base
+from app.models.__all_models import Base
 from fastapi.testclient import TestClient
 from httpx import AsyncClient, ASGITransport
 from app.main import app 

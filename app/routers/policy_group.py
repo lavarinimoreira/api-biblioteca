@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.exc import IntegrityError
-from app.models.models import GrupoPolitica as GrupoPoliticaModel
+from app.models.policy_group import GrupoPolitica as GrupoPoliticaModel
 from app.schemas.policy_group import GrupoPoliticaCreate, GrupoPoliticaOut, GrupoPoliticaUpdate
 from app.database import get_db
 

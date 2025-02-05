@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import insert, delete
-from app.models.models import grupo_politica_permissao
+from app.models.policy_group_permission import grupo_politica_permissao
 from app.schemas.policy_group_permission import GrupoPoliticaPermissaoCreate, GrupoPoliticaPermissaoOut
 from app.database import get_db
 

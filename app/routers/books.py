@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select  # Import necessário para consultas
 
 from app.database import get_db
-from app.models.models import Livro
+from app.models.book import Livro
 from app.schemas.book import LivroCreate, LivroRead, LivroUpdate
 
 router = APIRouter(prefix="/livros", tags=["Livros"])

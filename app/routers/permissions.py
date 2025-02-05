@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.exc import IntegrityError
-from app.models.models import Permissao as PermissaoModel
+from app.models.permission import Permissao as PermissaoModel
 from app.schemas.permission import PermissaoCreate, PermissaoOut, PermissaoUpdate
 from app.database import get_db
 from datetime import datetime

@@ -1,7 +1,9 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from app.models.models import Emprestimo as EmprestimoModel, Usuario as UsuarioModel, Livro as LivroModel
+from app.models.loan import Emprestimo as EmprestimoModel
+from app.models.user import Usuario as UsuarioModel
+from app.models.book import Livro as LivroModel
 from app.schemas.loan import EmprestimoCreate, EmprestimoOut, EmprestimoUpdate
 from app.database import get_db
 from datetime import datetime, timedelta

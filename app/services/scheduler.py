@@ -2,7 +2,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.database import get_db
-from app.models.models import Emprestimo as EmprestimoModel, Livro as LivroModel
+from app.models.__all_models import Emprestimo as EmprestimoModel, Livro as LivroModel
 from datetime import datetime
 import asyncio
 
@@ -25,3 +25,6 @@ def iniciar_scheduler():
     scheduler = AsyncIOScheduler()
     scheduler.add_job(verificar_emprestimos_vencidos, "interval", hours=1)  # Executa a cada 1 hora
     scheduler.start()
+
+# Nota:
+# Pesquisar sobre o Celery para tarefas de segundo plano.
