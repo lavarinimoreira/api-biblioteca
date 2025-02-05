@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from app.services.scheduler import iniciar_scheduler
-from app.routers import books, users, loans
+from app.routers import books, permissions, users, loans, policy_group, policy_group_permissions
 
 
 app = FastAPI()
@@ -18,3 +18,6 @@ async def startup_event():
 app.include_router(books.router)
 app.include_router(users.router)
 app.include_router(loans.router)
+app.include_router(policy_group.router)
+app.include_router(permissions.router)
+app.include_router(policy_group_permissions.router)
