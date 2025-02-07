@@ -18,7 +18,14 @@ dependencies = [
     "pytest (>=8.3.4,<9.0.0)",
     "httpx (>=0.28.1,<0.29.0)",
     "pydantic[email] (>=2.10.6,<3.0.0)",
-    "apscheduler (>=3.11.0,<4.0.0)"
+    "apscheduler (>=3.11.0,<4.0.0)",
+    "psycopg2-binary (>=2.9.10,<3.0.0)",
+    "python-jose[cryptography] (>=3.3.0,<4.0.0)",
+    "pytz (>=2025.1,<2026.0)",
+    "python-multipart (>=0.0.20,<0.0.21)",
+    "passlib (>=1.7.4,<2.0.0)",
+    "python-dotenv (>=1.0.1,<2.0.0)",
+    "bcrypt (==4.0.1)"
 ]
 
 

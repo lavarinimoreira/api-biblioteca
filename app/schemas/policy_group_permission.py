@@ -9,4 +9,4 @@ class GrupoPoliticaPermissaoCreate(GrupoPoliticaPermissaoBase):
 
 class GrupoPoliticaPermissaoOut(GrupoPoliticaPermissaoBase):
     class Config:
-        orm_mode = True
+        from_attributes = True

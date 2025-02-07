@@ -10,27 +10,6 @@ router = APIRouter(prefix="/usuarios", tags=["Usuarios"])
 
 
 """---------------------------------------------------------------------------
-CREATE routers
-"""
-# Criar um novo usuário
-@router.post("/signup/", response_model=UsuarioOut, status_code=status.HTTP_201_CREATED)
-async def criar_usuario(usuario: UsuarioCreate, db: AsyncSession = Depends(get_db)):
-    novo_usuario = UsuarioModel(**usuario.model_dump())
-    db.add(novo_usuario)
-    try:
-        await db.commit()
-        await db.refresh(novo_usuario)
-    except IntegrityError as e:
-        await db.rollback()
-        if 'email' in str(e.orig):
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Email '{usuario.email}' já está cadastrado.")
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Erro ao criar o usuário.")
-    return novo_usuario
-
-   
-
-
-"""---------------------------------------------------------------------------
 READ routers
 """
 # Listar todos os usuários

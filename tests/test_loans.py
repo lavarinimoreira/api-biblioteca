@@ -29,7 +29,7 @@ livro_data = {
 @pytest.mark.asyncio
 async def test_criar_emprestimo(client: AsyncClient):
     # Criar usuario
-    response_usuario = await client.post("/usuarios/signup/", json=usuario_data)
+    response_usuario = await client.post("/auth/", json=usuario_data)
     assert response_usuario.status_code == status.HTTP_201_CREATED
     usuario_id = response_usuario.json()["id"]
 
@@ -55,7 +55,7 @@ async def test_criar_emprestimo(client: AsyncClient):
 @pytest.mark.asyncio
 async def test_listar_emprestimos(client: AsyncClient):
     # Criar usuario
-    response_usuario = await client.post("/usuarios/signup/", json=usuario_data)
+    response_usuario = await client.post("/auth/", json=usuario_data)
     assert response_usuario.status_code == status.HTTP_201_CREATED
     usuario_id = response_usuario.json()["id"]
 
@@ -81,7 +81,7 @@ async def test_listar_emprestimos(client: AsyncClient):
 @pytest.mark.asyncio
 async def test_obter_emprestimo_por_id(client: AsyncClient):
     # Criar usuario
-    response_usuario = await client.post("/usuarios/signup/", json=usuario_data)
+    response_usuario = await client.post("/auth/", json=usuario_data)
     usuario_id = response_usuario.json()["id"]
 
     # Criar livro
@@ -107,7 +107,7 @@ async def test_obter_emprestimo_por_id(client: AsyncClient):
 @pytest.mark.asyncio
 async def test_renovar_emprestimo(client: AsyncClient):
     # Criar usuario
-    response_usuario = await client.post("/usuarios/signup/", json=usuario_data)
+    response_usuario = await client.post("/auth/", json=usuario_data)
     usuario_id = response_usuario.json()["id"]
 
     # Criar livro
@@ -138,7 +138,7 @@ async def test_renovar_emprestimo(client: AsyncClient):
 @pytest.mark.asyncio
 async def test_devolver_emprestimo(client: AsyncClient):
     # Criar usuario
-    response_usuario = await client.post("/usuarios/signup/", json=usuario_data)
+    response_usuario = await client.post("/auth/", json=usuario_data)
     usuario_id = response_usuario.json()["id"]
 
     # Criar livro
@@ -164,7 +164,7 @@ async def test_devolver_emprestimo(client: AsyncClient):
 @pytest.mark.asyncio
 async def test_deletar_emprestimo(client: AsyncClient):
     # Criar usuario
-    response_usuario = await client.post("/usuarios/signup/", json=usuario_data)
+    response_usuario = await client.post("/auth/", json=usuario_data)
     usuario_id = response_usuario.json()["id"]
 
     # Criar livro

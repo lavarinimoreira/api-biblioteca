@@ -14,29 +14,30 @@ usuario_data = {
 # Teste para criar um novo usuário
 @pytest.mark.asyncio
 async def test_criar_usuario(client: AsyncClient):
-    response = await client.post("/usuarios/signup/", json=usuario_data)
+    response = await client.post("/auth/", json=usuario_data)
     assert response.status_code == 201
     data = response.json()
     assert data["nome"] == usuario_data["nome"]
     assert data["email"] == usuario_data["email"]
 
-# Teste para verificar a duplicação de email
 @pytest.mark.asyncio
 async def test_criar_usuario_email_duplicado(client: AsyncClient):
     # Primeiro, cria o usuário
-    await client.post("/usuarios/signup/", json=usuario_data)
+    await client.post("/auth/", json=usuario_data)
 
     # Tenta criar novamente com o mesmo email
-    response = await client.post("/usuarios/signup/", json=usuario_data)
+    response = await client.post("/auth/", json=usuario_data)
+
     assert response.status_code == 400
-    assert response.json()["detail"] == f"Email '{usuario_data['email']}' já está cadastrado."
+    assert response.json()["detail"] == f"O email fornecido já está cadastrado."
+
 
 
 # Teste para listar usuários
 @pytest.mark.asyncio
 async def test_listar_usuarios(client: AsyncClient):
     # Cria um usuário para garantir que há pelo menos um
-    await client.post("/usuarios/signup/", json=usuario_data)
+    await client.post("/auth/", json=usuario_data)
     
     response = await client.get("/usuarios/")
     assert response.status_code == 200
@@ -48,7 +49,7 @@ async def test_listar_usuarios(client: AsyncClient):
 @pytest.mark.asyncio
 async def test_obter_usuario_por_id(client: AsyncClient):
     # Cria o usuário primeiro
-    response_criar = await client.post("/usuarios/signup/", json=usuario_data)
+    response_criar = await client.post("/auth/", json=usuario_data)
     usuario_id = response_criar.json()["id"]
 
     # Busca o usuário pelo ID
@@ -69,7 +70,7 @@ async def test_obter_usuario_inexistente(client: AsyncClient):
 @pytest.mark.asyncio
 async def test_atualizar_usuario(client: AsyncClient):
     # Cria o usuário
-    response_criar = await client.post("/usuarios/signup/", json=usuario_data)
+    response_criar = await client.post("/auth/", json=usuario_data)
     usuario_id = response_criar.json()["id"]
 
     # Dados para atualização
@@ -89,7 +90,7 @@ async def test_atualizar_usuario(client: AsyncClient):
 @pytest.mark.asyncio
 async def test_deletar_usuario(client: AsyncClient):
     # Cria o usuário
-    response_criar = await client.post("/usuarios/signup/", json=usuario_data)
+    response_criar = await client.post("/auth/", json=usuario_data)
     usuario_id = response_criar.json()["id"]
 
     # Deleta o usuário

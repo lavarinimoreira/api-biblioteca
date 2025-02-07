@@ -13,8 +13,13 @@ from httpx import AsyncClient, ASGITransport
 from app.main import app 
 from sqlalchemy.pool import NullPool
 
+from dotenv import load_dotenv
+import os
 
-TEST_DATABASE_URL = "postgresql+asyncpg://dev_gabriel:university@localhost:5432/biblioteca_test"
+load_dotenv()  # Carrega as variáveis do .env
+
+
+TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL")
 
 test_engine: AsyncEngine = create_async_engine(
     TEST_DATABASE_URL,
@@ -26,7 +31,8 @@ TestAsyncSessionLocal: AsyncSession = sessionmaker(
     autocommit=False,
     bind=test_engine,
     class_=AsyncSession,
-    expire_on_commit=False
+    expire_on_commit=False,
+    autoflush=False
 )
 
 # Configura o banco de dados para criar e dropar tabelas para os testes
