@@ -10,7 +10,7 @@ class Permissao(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     nome = Column(String(100), nullable=False, unique=True)
     descricao = Column(String(255))
-    namespace = Column(String(100))
+    namespace = Column(String(100), nullable=False, unique=True)
     data_criacao = Column(DateTime, default=func.now())
     data_atualizacao = Column(DateTime, default=func.now(), onupdate=func.now())
 

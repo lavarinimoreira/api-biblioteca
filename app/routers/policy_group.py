@@ -3,14 +3,20 @@ from fastapi import APIRouter, HTTPException, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.exc import IntegrityError
+
 from app.models.policy_group import GrupoPolitica as GrupoPoliticaModel
 from app.schemas.policy_group import GrupoPoliticaCreate, GrupoPoliticaOut, GrupoPoliticaUpdate
 from app.database import get_db
+from app.services.security import get_current_user
+
 
 router = APIRouter(prefix="/grupos_politica", tags=["Grupos Politica"])
 
+
 @router.post("/", response_model=GrupoPoliticaOut, status_code=status.HTTP_201_CREATED)
 async def criar_grupo_politica(grupo: GrupoPoliticaCreate, db: AsyncSession = Depends(get_db)):
+    # if user is None or user.get('grupo_politica') != "admin":
+    #     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Acesso não autorizado. Falha de autenticação.')
     novo_grupo = GrupoPoliticaModel(nome=grupo.nome)
     db.add(novo_grupo)
     try:

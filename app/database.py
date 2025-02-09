@@ -15,7 +15,6 @@ AsyncSessionLocal: AsyncSession = sessionmaker(autocommit=False, bind=engine, cl
 
 Base = declarative_base()
 
-
 # Função para obter sessão do banco de dados
 async def get_db():
     async with AsyncSessionLocal() as session:

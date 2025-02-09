@@ -8,7 +8,6 @@ class UsuarioBase(BaseModel):
     email: EmailStr
     telefone: Optional[str] = Field(None, max_length=15)
     endereco_completo: Optional[str] = Field(None, max_length=200)
-    grupo_politica_id: Optional[int]  # Relacionamento opcional
 
 # # Schema para criação (inclui senha)
 class UsuarioCreate(UsuarioBase):
@@ -26,8 +25,25 @@ class UsuarioCreate(UsuarioBase):
                     "email": "mussum@gmail.com",
                     "telefone": "(31)99999-9999",
                     "endereco_completo": "Rua Piracicaba, número 567, Bairro Floresta.",
-                    "grupo_politica_id": "substitua essa string pelo valor puro: null",
                     "senha_hash": "senhaSegura123"
+                }
+            ]
+        }
+    }
+
+
+class UsuarioCreateAdmin(UsuarioCreate):
+    grupo_politica: str = Field(..., max_length=32)
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "nome": "Novo Admin",
+                    "email": "novo_admin@biblioteca.com",
+                    "telefone": "(31)99999-9999",
+                    "endereco_completo": "Rua Piracicaba, número 567, Bairro Floresta.",
+                    "senha_hash": "senhaAdmin123",
+                    "grupo_politica": "admin"
                 }
             ]
         }
@@ -39,8 +55,10 @@ class UsuarioUpdate(BaseModel):
     email: Optional[EmailStr] = None
     telefone: Optional[str] = Field(None, max_length=15)
     endereco_completo: Optional[str] = Field(None, max_length=200)
-    senha: Optional[str] = Field(None, min_length=8, max_length=128)
-    grupo_politica_id: Optional[int] = None
+    senha_hash: Optional[str] = Field(None, min_length=8, max_length=128)
+    
+class UsuarioAdminUpdate(UsuarioUpdate):
+    grupo_politica: Optional[str] = None
 
 # Schema para resposta (exclui a senha_hash)
 class UsuarioOut(UsuarioBase):

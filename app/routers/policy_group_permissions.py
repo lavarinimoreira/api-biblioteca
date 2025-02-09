@@ -13,7 +13,7 @@ router = APIRouter(prefix="/grupo_politica_permissoes", tags=["Grupo Politica Pe
 @router.post("/", response_model=GrupoPoliticaPermissaoOut, status_code=status.HTTP_201_CREATED)
 async def adicionar_permissao_ao_grupo(relacao: GrupoPoliticaPermissaoCreate, db: AsyncSession = Depends(get_db)):
     stmt = insert(grupo_politica_permissao).values(
-        grupo_politica_id=relacao.grupo_politica_id,
+        grupo_politica=relacao.grupo_politica,
         permissao_id=relacao.permissao_id
     )
     try:
@@ -28,12 +28,12 @@ async def adicionar_permissao_ao_grupo(relacao: GrupoPoliticaPermissaoCreate, db
 async def listar_permissoes_grupo(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(grupo_politica_permissao))
     permissoes_grupos = result.fetchall()
-    return [{"grupo_politica_id": row.grupo_politica_id, "permissao_id": row.permissao_id} for row in permissoes_grupos]
+    return [{"grupo_politica": row.grupo_politica, "permissao_id": row.permissao_id} for row in permissoes_grupos]
 
 @router.delete("/", status_code=status.HTTP_204_NO_CONTENT)
-async def remover_permissao_do_grupo(grupo_politica_id: int, permissao_id: int, db: AsyncSession = Depends(get_db)):
+async def remover_permissao_do_grupo(grupo_politica: int, permissao_id: int, db: AsyncSession = Depends(get_db)):
     stmt = delete(grupo_politica_permissao).where(
-        grupo_politica_permissao.c.grupo_politica_id == grupo_politica_id,
+        grupo_politica_permissao.c.grupo_politica == grupo_politica,
         grupo_politica_permissao.c.permissao_id == permissao_id
     )
     result = await db.execute(stmt)

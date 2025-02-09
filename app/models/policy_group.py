@@ -13,5 +13,5 @@ class GrupoPolitica(Base):
     data_criacao = Column(DateTime, default=func.now())
     data_atualizacao = Column(DateTime, default=func.now(), onupdate=func.now())
 
-    usuarios = relationship("Usuario", back_populates="grupo_politica")
+    usuarios = relationship("Usuario", back_populates="grupo_politica_rel")
     permissoes = relationship("Permissao", secondary=grupo_politica_permissao, back_populates="grupos_politica")
