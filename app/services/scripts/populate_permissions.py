@@ -18,13 +18,13 @@ permissoes = [
     {"nome": "Editar Livro", "namespace": "book.update", "descricao": "Permite editar um livro existente"},
     {"nome": "Deletar Livro", "namespace": "book.delete", "descricao": "Permite remover um livro"},
 
-    # Permissões para Administradores
+
     {"nome": "Criar Admin", "namespace": "admin.create", "descricao": "Permite criar um novo administrador"},
     {"nome": "Listar Admins", "namespace": "admin.read", "descricao": "Permite verificar os administradores registrados"},
     {"nome": "Editar Admin", "namespace": "admin.update", "descricao": "Permite editar um administrador"},
     {"nome": "Deletar Admin", "namespace": "admin.delete", "descricao": "Permite deletar um administrador"},
     
-    # Permissões sobre Clientes
+ 
     {"nome": "Criar Cliente", "namespace": "client.create", "descricao": "Permite criar um cliente"},
     {"nome": "Editar Cliente", "namespace": "client.update", "descricao": "Permite editar um cliente"},
     {"nome": "Listar Clientes", "namespace": "client.read", "descricao": "Permite visualizar todos os clientes registrados"},

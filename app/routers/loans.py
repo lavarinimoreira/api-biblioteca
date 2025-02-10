@@ -8,13 +8,16 @@ from app.models.user import Usuario as UsuarioModel
 from app.models.book import Livro as LivroModel
 from app.schemas.loan import EmprestimoCreate, EmprestimoOut, EmprestimoUpdate
 from app.database import get_db
+from app.services.security import get_current_user
 
 
 router = APIRouter(prefix="/emprestimos", tags=["Emprestimos"])
 
-# Criar um novo emprestimo
+# Criar um novo emprestimo (apenas usuários com "loan.create" podem criar empréstimos)
 @router.post("/", response_model=EmprestimoOut, status_code=status.HTTP_201_CREATED)
-async def criar_emprestimo(emprestimo: EmprestimoCreate, db: AsyncSession = Depends(get_db)):
+async def criar_emprestimo(emprestimo: EmprestimoCreate, current_user: UsuarioModel = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    if "loan.create" not in current_user.get("permissoes", []):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Você não tem permissão para criar empréstimos.")
     # Verificar se o usuario existe
     usuario = await db.get(UsuarioModel, emprestimo.usuario_id)
     if not usuario:
@@ -48,24 +51,57 @@ async def criar_emprestimo(emprestimo: EmprestimoCreate, db: AsyncSession = Depe
 
     return novo_emprestimo
 
-# Listar todos os emprestimos
-@router.get("/", response_model=list[EmprestimoOut])
-async def listar_emprestimos(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(EmprestimoModel))
-    return result.scalars().all()
+from sqlalchemy.future import select
 
-# Obter emprestimo por ID
+# Listar todos os empréstimos de um determinado usuário (permitido apenas a usuários com o namespace "loan.read_by_client")
+@router.get("/", response_model=list[EmprestimoOut])
+async def listar_emprestimos(
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    # Verificar se o usuário tem a permissão necessária
+    if "loan.read_by_client" not in current_user.get("permissoes", []):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Permissão negada."
+        )
+
+    # Consultar os empréstimos do usuário autenticado
+    query = select(EmprestimoModel).where(EmprestimoModel.usuario_id == current_user["id"])
+    result = await db.execute(query)
+    emprestimos = result.scalars().all()
+
+    return emprestimos
+
+# Obter emprestimo por ID (permitido apenas a usuários com o namespace "admin.read")
 @router.get("/{emprestimo_id}", response_model=EmprestimoOut)
-async def obter_emprestimo(emprestimo_id: int, db: AsyncSession = Depends(get_db)):
+async def obter_emprestimo(emprestimo_id: int, current_user: UsuarioModel = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    # Verificar se o usuário tem a permissão necessária
+    if "admin.read" not in current_user.get("permissoes", []):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Permissão negada."
+        )
     emprestimo = await db.get(EmprestimoModel, emprestimo_id)
     if not emprestimo:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Empréstimo não encontrado")
     return emprestimo
 
 
-# Atualizar emprestimo (renovar ou devolver)
+# Atualizar emprestimo (permitido apenas a usuários com o namespace "loan.renew")
 @router.put("/{emprestimo_id}", response_model=EmprestimoOut)
-async def atualizar_emprestimo(emprestimo_id: int, emprestimo_update: EmprestimoUpdate, db: AsyncSession = Depends(get_db)):
+async def atualizar_emprestimo(
+    emprestimo_id: int, 
+    emprestimo_update: EmprestimoUpdate, 
+    db: AsyncSession = Depends(get_db),
+    current_user: UsuarioModel = Depends(get_current_user)
+):
+    # Verificar se o usuário tem a permissão necessária
+    if "loan.renew" not in current_user.get("permissoes", []):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Permissão negada."
+        )
     emprestimo = await db.get(EmprestimoModel, emprestimo_id)
     if not emprestimo:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Empréstimo não encontrado")
@@ -94,9 +130,15 @@ async def atualizar_emprestimo(emprestimo_id: int, emprestimo_update: Emprestimo
     return emprestimo
 
 
-# Deletar emprestimo
+# Deletar emprestimo (permitido apenas a usuários com o namespace "admin.delete")
 @router.delete("/{emprestimo_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def deletar_emprestimo(emprestimo_id: int, db: AsyncSession = Depends(get_db)):
+async def deletar_emprestimo(emprestimo_id: int, db: AsyncSession = Depends(get_db), current_user: UsuarioModel = Depends(get_current_user)):
+    # Verificar se o usuário tem a permissão necessária
+    if "loan.renew" not in current_user.get("permissoes", []):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Permissão negada."
+        )
     emprestimo = await db.get(EmprestimoModel, emprestimo_id)
     if not emprestimo:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Empréstimo não encontrado")

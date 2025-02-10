@@ -3,7 +3,7 @@ from sqlalchemy import NullPool, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, AsyncEngine
 from sqlalchemy.orm import sessionmaker
 import pytest_asyncio
-import pytest
+# import pytest
 import asyncio
 from fastapi.testclient import TestClient
 from httpx import AsyncClient, ASGITransport
@@ -30,7 +30,7 @@ TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL")
 test_engine: AsyncEngine = create_async_engine(
     TEST_DATABASE_URL,
     echo=True,
-    poolclass=NullPool  # Desativa o pool de conexões
+    poolclass=NullPool  # Desativa o pool de conexões, cada teste abre uma nova conexão isolada.
 )
 
 TestAsyncSessionLocal: AsyncSession = sessionmaker(
@@ -90,7 +90,7 @@ async def prepare_test_db():
         # Criando um usuário administrador no banco de testes
         admin_email = "admin@biblioteca.com"
         admin_nome = "Administrador"
-        admin_senha = "admin123"  # 🔹 ALTERE APÓS TESTES SE NECESSÁRIO
+        admin_senha = "admin123"  # ALTERE APÓS TESTES SE NECESSÁRIO
 
         result_admin_user = await session.execute(select(UsuarioModel).where(UsuarioModel.email == admin_email))
         if not result_admin_user.scalar_one_or_none():
@@ -103,7 +103,7 @@ async def prepare_test_db():
                 grupo_politica=grupo_admin.nome  # Definindo que o admin pertence ao grupo "admin"
             )
             session.add(novo_admin)
-            print(f"✅ Usuário admin criado: {admin_email} | Senha: {admin_senha}")
+            print(f"Usuário admin criado: {admin_email} | Senha: {admin_senha}")
 
         # Criando um usuário cliente no banco de testes
         cliente_email = "cliente@biblioteca.com"
@@ -192,3 +192,15 @@ async def token_cliente(async_session):
         db=async_session  # Passando a sessão do banco para buscar permissões
     )
     return token
+
+# Fixture para obter os headers de autenticação de um ADMIN
+@pytest_asyncio.fixture
+async def admin_auth_headers(token_admin):
+    """Retorna os headers de autorização para um admin autenticado"""
+    return {"Authorization": f"Bearer {token_admin}"}
+
+# Fixture para obter os headers de autenticação de um CLIENTE
+@pytest_asyncio.fixture
+async def client_auth_headers(token_cliente):
+    """Retorna os headers de autorização para um cliente autenticado"""
+    return {"Authorization": f"Bearer {token_cliente}"}

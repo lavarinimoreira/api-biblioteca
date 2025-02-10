@@ -34,7 +34,6 @@ async def create_user(create_user_request: UsuarioCreate, db: AsyncSession = Dep
         email=create_user_request.email,
         telefone=create_user_request.telefone,
         endereco_completo=create_user_request.endereco_completo,
-        # grupo_politica_id=create_user_request.grupo_politica_id,
         senha_hash=bcrypt_context.hash(create_user_request.senha_hash)
     )
 
@@ -58,7 +57,7 @@ async def create_user(create_user_request: UsuarioCreate, db: AsyncSession = Dep
 
 
 # Login
-@router.post("/token", response_model=Token)
+@router.post("/token", status_code=status.HTTP_200_OK, response_model=Token)
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()], 
     db: AsyncSession = Depends(get_db)
@@ -67,6 +66,8 @@ async def login_for_access_token(
     if not user:
        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Não foi possível validar o email.')
     
-    token = await create_access_token(user.email, user.id, user.grupo_politica, timedelta(minutes=20))
+    # Correção: Passar o `db` corretamente para buscar permissões do usuário
+    token = await create_access_token(user.email, user.id, user.grupo_politica, timedelta(minutes=20), db)
 
     return {'access_token': token, 'token_type': 'bearer'}
+

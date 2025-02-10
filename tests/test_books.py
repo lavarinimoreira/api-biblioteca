@@ -1,155 +1,174 @@
-# import pytest
-# from fastapi import status
+import pytest
+from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.models.book import Livro as LivroModel
+from fastapi import status
 
+# Criar um livro com sucesso (ADMIN)
+@pytest.mark.asyncio
+async def test_criar_livro_sucesso(client: AsyncClient, async_session: AsyncSession, admin_auth_headers):
+    novo_livro = {
+        "titulo": "1984",
+        "autor": "George Orwell",
+        "genero": "Distopia",
+        "editora": "Companhia das Letras",
+        "ano_publicacao": 1949,
+        "numero_paginas": 328,
+        "quantidade_disponivel": 10,
+        "isbn": "9788535902771"
+    }
 
-# """---------------------------------------------------------------------------
-# CREATE tests
-# """
-# @pytest.mark.asyncio
-# async def test_create_livro(client):
-#     response = await client.post("/livros/create/", json={
-#         "titulo": "O Hobbit",
-#         "autor": "J.R.R. Tolkien",
-#         "genero": "Fantasia",
-#         "editora": "HarperCollins",
-#         "ano_publicacao": 1937,
-#         "numero_paginas": 310,
-#         "quantidade_disponivel": 5,
-#         "isbn": "9780007525492"
-#     })
+    response = await client.post("/livros/", json=novo_livro, headers=admin_auth_headers)
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["titulo"] == "1984"
 
-#     assert response.status_code == status.HTTP_201_CREATED  
-#     data = response.json()
-#     assert data["titulo"] == "O Hobbit"
-#     assert data["autor"] == "J.R.R. Tolkien"
+# Cliente NÃO pode criar um livro
+@pytest.mark.asyncio
+async def test_cliente_nao_pode_criar_livro(client: AsyncClient, client_auth_headers):
+    novo_livro = {
+        "titulo": "O Conto da Aia",
+        "autor": "Margaret Atwood",
+        "genero": "Distopia",
+        "editora": "Rocco",
+        "ano_publicacao": 1985,
+        "numero_paginas": 336,
+        "quantidade_disponivel": 5,
+        "isbn": "9788532517653"
+    }
 
+    response = await client.post("/livros/", json=novo_livro, headers=client_auth_headers)
+    assert response.status_code == status.HTTP_403_FORBIDDEN
 
-# import pytest
-# from fastapi import status
+# Listar livros e verificar se a busca funciona
+@pytest.mark.asyncio
+async def test_listar_livros_com_filtro(client: AsyncClient, admin_auth_headers):
+    livros = [
+        {
+            "titulo": "O Senhor dos Anéis",
+            "autor": "J.R.R. Tolkien",
+            "genero": "Fantasia",
+            "editora": "HarperCollins",
+            "ano_publicacao": 1954,
+            "numero_paginas": 1178,
+            "quantidade_disponivel": 5,
+            "isbn": "9780007525494"
+        },
+        {
+            "titulo": "Duna",
+            "autor": "Frank Herbert",
+            "genero": "Ficção Científica",
+            "editora": "Aleph",
+            "ano_publicacao": 1965,
+            "numero_paginas": 896,
+            "quantidade_disponivel": 3,
+            "isbn": "9788576572008"
+        }
+    ]
 
-# @pytest.mark.asyncio
-# async def test_create_livro_quantidade_negativa(client):
-#     response = await client.post("/livros/create/", json={
-#         "titulo": "Livro com Quantidade Negativa",
-#         "autor": "Autor Teste",
-#         "genero": "Ficção",
-#         "editora": "Editora Teste",
-#         "ano_publicacao": 2025,
-#         "numero_paginas": 250,
-#         "quantidade_disponivel": -3,  # Valor negativo que deve ser rejeitado
-#         "isbn": "9780000000001"
-#     })
+    for livro in livros:
+        response = await client.post("/livros/", json=livro, headers=admin_auth_headers)
+        assert response.status_code == status.HTTP_201_CREATED
 
-#     # O código esperado é 422 Unprocessable Entity
-#     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+    # Teste de busca por título
+    response = await client.get("/livros/?titulo=Senhor")
+    assert response.status_code == status.HTTP_200_OK
+    assert len(response.json()) == 1
+    assert response.json()[0]["titulo"] == "O Senhor dos Anéis"
 
-#     # Verificar se a mensagem de erro está relacionada à quantidade negativa
-#     error_detail = response.json()
-#     assert error_detail["detail"][0]["loc"] == ["body", "quantidade_disponivel"]
-#     assert error_detail["detail"][0]["msg"] == "Input should be greater than or equal to 0"
-#     assert error_detail["detail"][0]["type"] == "greater_than_equal"
+    # Teste de busca por autor
+    response = await client.get("/livros/?autor=Tolkien")
+    assert response.status_code == status.HTTP_200_OK
+    assert len(response.json()) == 1
+    assert response.json()[0]["autor"] == "J.R.R. Tolkien"
 
+    # Teste de busca por gênero
+    response = await client.get("/livros/?genero=Fantasia")
+    assert response.status_code == status.HTTP_200_OK
+    assert len(response.json()) == 1
+    assert response.json()[0]["autor"] == "J.R.R. Tolkien"
 
-# """---------------------------------------------------------------------------
-# READ tests
-# """
-# @pytest.mark.asyncio
-# async def test_read_livros(client):
-#     # Primeiro, cria um livro para garantir que temos algo no banco
-#     await client.post("/livros/create/", json={
-#         "titulo": "Dom Quixote",
-#         "autor": "Miguel de Cervantes",
-#         "genero": "Distopia",
-#         "editora": "Francisco de Robles",
-#         "ano_publicacao": 1605,
-#         "numero_paginas": 328,
-#         "quantidade_disponivel": 3,
-#         "isbn": "9786584956261"
-#     })
+# Obter livro inexistente (deve retornar 404)
+@pytest.mark.asyncio
+async def test_obter_livro_nao_existente(client: AsyncClient, admin_auth_headers):
+    novo_livro = {
+        "titulo": "1984",
+        "autor": "George Orwell",
+        "genero": "Distopia",
+        "editora": "Companhia das Letras",
+        "ano_publicacao": 1949,
+        "numero_paginas": 328,
+        "quantidade_disponivel": 10,
+        "isbn": "9788535902771"
+    }
+    response = await client.post("/livros/", json=novo_livro, headers=admin_auth_headers)
+    response = await client.get("/livros/9999")  # ID inexistente
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json()["detail"] == "Livro não encontrado."
 
-#     # Agora testa o GET /livros
-#     response = await client.get("/livros/")
-    
-#     assert response.status_code == status.HTTP_200_OK
-#     livros = response.json()
-    
-#     assert isinstance(livros, list)  # Verifica se o retorno é uma lista
-#     assert len(livros) >= 1  # Deve haver pelo menos um livro cadastrado
-    
-#     # Verifica se o livro 'Dom Quixote' está na lista
-#     encontrado = any(livro["titulo"] == "Dom Quixote" and livro["autor"] == "Miguel de Cervantes" for livro in livros)
-#     assert encontrado
+# Atualizar livro como ADMIN
+@pytest.mark.asyncio
+async def test_atualizar_livro(client: AsyncClient, async_session: AsyncSession, admin_auth_headers):
+    livro = LivroModel(
+        titulo="Harry Potter e a Pedra Filosofal",
+        autor="J.K. Rowling",
+        genero="Fantasia",
+        editora="Rocco",
+        ano_publicacao=1997,
+        numero_paginas=223,
+        quantidade_disponivel=8,
+        isbn="9788532530785"
+    )
+    async_session.add(livro)
+    await async_session.commit()
 
+    update_data = {"quantidade_disponivel": 15}
 
-# """---------------------------------------------------------------------------
-# UPDATE tests
-# """
-# @pytest.mark.asyncio
-# async def test_update_livro(client):
-#     # Criação do livro
-#     create_response = await client.post("/livros/create/", json={
-#         "titulo": "1984",
-#         "autor": "George Orwell",
-#         "genero": "Distopia",
-#         "editora": "Secker & Warburg",
-#         "ano_publicacao": 1949,
-#         "numero_paginas": 328,
-#         "quantidade_disponivel": 4,
-#         "isbn": "9780451524935"
-#     })
-    
-#     assert create_response.status_code == status.HTTP_201_CREATED
-#     livro_criado = create_response.json()
-#     livro_id = livro_criado["id"]
+    response = await client.put(f"/livros/{livro.id}", json=update_data, headers=admin_auth_headers)
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["quantidade_disponivel"] == 15
 
-#     # Verificar se o livro existe após criação
-#     get_response = await client.get(f"/livros/{livro_id}")
-#     assert get_response.status_code == status.HTTP_200_OK, f"Livro não encontrado após criação: {get_response.json()}"
+# Cliente NÃO pode atualizar um livro
+@pytest.mark.asyncio
+async def test_cliente_nao_pode_atualizar_livro(client: AsyncClient, async_session: AsyncSession, client_auth_headers):
+    livro = LivroModel(
+        titulo="Fundação",
+        autor="Isaac Asimov",
+        genero="Ficção Científica",
+        editora="Aleph",
+        ano_publicacao=1951,
+        numero_paginas=320,
+        quantidade_disponivel=7,
+        isbn="9788576572022"
+    )
+    async_session.add(livro)
+    await async_session.commit()
 
-#     # Atualizar o livro (rota atualizada para '/livro/update/{livro_id}')
-#     update_response = await client.put(f"/livros/update/{livro_id}", json={
-#         "titulo": "1984 - Edição Atualizada",
-#         "quantidade_disponivel": 10
-#     })
+    update_data = {"quantidade_disponivel": 20}
 
-#     assert update_response.status_code == status.HTTP_200_OK, f"Erro na atualização: {update_response.json()}"
-#     livro_atualizado = update_response.json()
+    response = await client.put(f"/livros/{livro.id}", json=update_data, headers=client_auth_headers)
+    assert response.status_code == status.HTTP_403_FORBIDDEN
 
-#     # Verificações para garantir que os campos foram atualizados corretamente
-#     assert livro_atualizado["titulo"] == "1984 - Edição Atualizada"
-#     assert livro_atualizado["quantidade_disponivel"] == 10
+# Teste: Deletar um livro (ADMIN)
+@pytest.mark.asyncio
+async def test_deletar_livro(client: AsyncClient, async_session: AsyncSession, admin_auth_headers):
+    livro = LivroModel(
+        titulo="Neuromancer",
+        autor="William Gibson",
+        genero="Cyberpunk",
+        editora="Aleph",
+        ano_publicacao=1984,
+        numero_paginas=271,
+        quantidade_disponivel=3,
+        isbn="9788576572008"
+    )
+    async_session.add(livro)
+    await async_session.commit()
 
-#     # Verificação para garantir que os campos não atualizados permanecem inalterados
-#     assert livro_atualizado["autor"] == "George Orwell"
-#     assert livro_atualizado["isbn"] == "9780451524935"
+    # Deletar livro com autenticação
+    response = await client.delete(f"/livros/{livro.id}", headers=admin_auth_headers)
+    assert response.status_code == status.HTTP_204_NO_CONTENT
 
+    # Buscar livro deletado com autenticação (forçar a passagem dos headers)
+    response = await client.get(f"/livros/{livro.id}", headers=admin_auth_headers)
+    assert response.status_code == status.HTTP_404_NOT_FOUND
 
-
-# """---------------------------------------------------------------------------
-# DELETE tests
-# """
-# @pytest.mark.asyncio
-# async def test_delete_livro(client):
-#     # Primeiro, cria um livro para poder deletá-lo
-#     create_response = await client.post("/livros/create/", json={
-#         "titulo": "Livro para Deletar",
-#         "autor": "Autor Teste",
-#         "genero": "Teste",
-#         "editora": "Editora Teste",
-#         "ano_publicacao": 2020,
-#         "numero_paginas": 200,
-#         "quantidade_disponivel": 1,
-#         "isbn": "1234567890123"
-#     })
-
-#     assert create_response.status_code == status.HTTP_201_CREATED
-#     livro_criado = create_response.json()
-#     livro_id = livro_criado["id"]
-
-#     # Agora deleta o livro criado
-#     delete_response = await client.delete(f"/livros/delete/{livro_id}")
-#     assert delete_response.status_code == status.HTTP_204_NO_CONTENT
-
-#     # Tenta buscar o livro deletado para garantir que ele foi removido
-#     get_response = await client.get(f"/livros/{livro_id}")
-#     assert get_response.status_code == status.HTTP_404_NOT_FOUND
