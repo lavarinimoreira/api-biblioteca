@@ -107,8 +107,8 @@ async def atualizar_emprestimo(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Empréstimo não encontrado")
 
     # Impedir renovação se o status for 'Atrasado'
-    if emprestimo.status == "Atrasado":
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="O empréstimo está atrasado. O livro foi automaticamente devolvido pelo Scheduler.")
+    # if emprestimo.status == "Atrasado":
+    #     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="O empréstimo está atrasado.")
 
     # Renovar emprestimo
     if emprestimo_update.status == "Renovado":

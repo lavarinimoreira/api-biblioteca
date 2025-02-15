@@ -1,74 +1,60 @@
-# celery_app.py
 from celery import Celery
-from datetime import datetime
-from sqlalchemy.orm import Session
+from datetime import datetime, timedelta
+from sqlalchemy import select
 
-from celery import Celery
-from celery.schedules import crontab
-
-from app.database import AsyncSessionLocal  # Sua fábrica de sessão SQLAlchemy
-from app.models.loan import Emprestimo  # Modelo de empréstimo com relacionamentos configurados
-from app.services.celery.notifications import enviar_notificacao  # Função que implementa a lógica de notificação
-
+from app.models.loan import Emprestimo
+from app.services.celery.notifications import enviar_notificacao
+from app.services.celery.celery_config import SessionLocalCelery  # Sessão síncrona para o Celery
+from app.models.__all_models import Base 
 
 # Configurando o Celery
 celery_app = Celery(
     'tasks',
-    broker='redis://broker:6379/0',  # Utilizando o nome do serviço do Docker Compose
+    broker='redis://broker:6379/0',
     backend='redis://broker:6379/0'
 )
 
-# celery_app.conf.beat_schedule = {
-#     'verificar-emprestimos-a-cada-hora': {
-#         'task': 'celery_app.verificar_emprestimos_vencidos',
-#         'schedule': crontab(minute=0, hour='*'),  # executa a cada hora
-#     },
-# }
-from datetime import timedelta
-
 celery_app.conf.beat_schedule = {
-    'verificar-emprestimos-a-cada-10s': {
+    'verificar-emprestimos-diario': {
         'task': 'app.services.celery.celery_app.verificar_emprestimos_vencidos',
-        'schedule': timedelta(seconds=10),  # executa a cada 10 segundos
+        'schedule': timedelta(days=1),
     },
 }
 
 @celery_app.task
 def verificar_emprestimos_vencidos():
-    print('Verificando...')
-    
-# NOTA: Atualizar para assíncrono:
-# @celery_app.task
-# def verificar_emprestimos_vencidos():
-#     """
-#     Verifica todos os empréstimos cujo prazo de devolução já passou e não estão marcados como 'Atrasado',
-#     atualizando seu status e notificando os usuários.
-#     """
-#     db: Session = AsyncSessionLocal()
-#     try:
-#         # Obtém os empréstimos com data_devolucao vencida e que ainda não estão com status 'Atrasado'
-#         emprestimos = (
-#             db.query(Emprestimo)
-#               .filter(Emprestimo.data_devolucao < datetime.now(), Emprestimo.status != "Atrasado")
-#               .all()
-#         )
+    with SessionLocalCelery() as session:
+        try:
+            # Obtém a data atual
+            agora = datetime.utcnow()
+            # Calcula a data limite (7 dias atrás)
+            data_limite = agora - timedelta(days=7)
 
-#         for emprestimo in emprestimos:
-#             # Atualiza o status para 'Atrasado'
-#             emprestimo.status = "Atrasado"
-#             db.add(emprestimo)
+            # Consulta os empréstimos ativos com data de devolução ultrapassada
+            result = session.execute(
+                select(Emprestimo)
+                .filter(
+                    Emprestimo.status == "Ativo",  # Filtra empréstimos ativos
+                    Emprestimo.data_devolucao < data_limite,  # Filtra empréstimos com mais de 7 dias
+                )
+            )
+            emprestimos = result.scalars().all()
 
-#             # Notifica o usuário
-#             if emprestimo.usuario and hasattr(emprestimo.usuario, 'email'):
-#                 enviar_notificacao(emprestimo.usuario.email, emprestimo)
-#             else:
-#                 print(f"Usuário não encontrado ou sem e-mail para o empréstimo ID {emprestimo.id}")
+            # Atualiza o status e notifica os usuários
+            for emprestimo in emprestimos:
+                emprestimo.status = "Atrasado"
+                session.add(emprestimo)
 
-#         db.commit()
-#         return f"Atualizados {len(emprestimos)} empréstimos vencidos."
-#     except Exception as e:
-#         db.rollback()
-#         print(f"Erro ao processar empréstimos: {e}")
-#         raise e
-#     finally:
-#         db.close()
+                # Notifica o usuário
+                enviar_notificacao(
+                    email=emprestimo.usuario.email,  
+                    usuario_nome=emprestimo.usuario.nome,  
+                    nome_do_livro=emprestimo.livro.titulo  
+                )
+
+            session.commit()
+            return f"Atualizados {len(emprestimos)} empréstimos vencidos e notificações enviadas."
+        except Exception as e:
+            session.rollback()
+            print(f"Erro ao processar empréstimos: {e}")
+            raise e

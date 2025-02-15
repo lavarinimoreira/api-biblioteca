@@ -30,6 +30,7 @@ services:
     env_file:
       - .env
 
+
   broker:
     image: redis:6.2-alpine
     ports:

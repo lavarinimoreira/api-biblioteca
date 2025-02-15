@@ -26,8 +26,9 @@ dependencies = [
     "passlib (>=1.7.4,<2.0.0)",
     "python-dotenv (>=1.0.1,<2.0.0)",
     "bcrypt (==4.0.1)",
-    "celery (>=5.4.0,<6.0.0)",
-    "redis (>=5.2.1,<6.0.0)"
+    "celery[asyncio] (>=5.4.0,<6.0.0)",
+    "redis (>=5.2.1,<6.0.0)",
+    "asgiref (>=3.8.1,<4.0.0)"
 ]
 
 
