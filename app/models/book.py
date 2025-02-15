@@ -20,3 +20,4 @@ class Livro(Base):
     data_criacao = Column(DateTime, default=func.now())
     data_atualizacao = Column(DateTime, default=func.now(), onupdate=func.now())
     emprestimos = relationship("Emprestimo", back_populates="livro")
+    image_url = Column(String, nullable=True) # Caminho da imagem

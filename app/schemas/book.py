@@ -17,6 +17,7 @@ class LivroCreate(BaseModel):
     numero_paginas: Optional[int] = Field(None, ge=0, le=50560) # Tendo como base o livro "Das Buch des dickste Universum", o livro mais grosso do mundo, com 50.560 páginas.
     quantidade_disponivel: int = Field(..., ge=0, description="A quantidade deve ser zero ou positiva.")
     isbn: str = Field(...)
+    image_url: Optional[str] = Field(None)  # Armazena a URL da capa
     """
     O Pydantic v2 mudou a forma de definir exemplos nos schemas.
     Antes, você podia passar example diretamente no Field, 
@@ -66,3 +67,25 @@ class LivroUpdate(BaseModel):
     quantidade_disponivel: Optional[int] = Field(None, ge=0, description="A quantidade deve ser zero ou positiva.")
     isbn: Optional[str] = None
 
+from datetime import datetime
+from typing import Optional
+from pydantic import BaseModel, Field
+
+class LivroOut(BaseModel):
+    id: int
+    titulo: str
+    autor: str
+    genero: Optional[str]
+    editora: Optional[str]
+    ano_publicacao: Optional[int]
+    numero_paginas: Optional[int]
+    quantidade_disponivel: int
+    isbn: str
+    image_url: Optional[str] = Field(
+        None, description="URL da capa do livro"
+    )
+    data_criacao: datetime
+    data_atualizacao: datetime
+
+    class Config:
+        from_attributes = True

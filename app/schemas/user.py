@@ -8,6 +8,7 @@ class UsuarioBase(BaseModel):
     email: EmailStr
     telefone: Optional[str] = Field(None, max_length=15)
     endereco_completo: Optional[str] = Field(None, max_length=200)
+    profile_picture_url: Optional[str] = Field(None)
 
 # Schema para criação (inclui senha)
 class UsuarioCreate(UsuarioBase):

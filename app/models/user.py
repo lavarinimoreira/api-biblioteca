@@ -12,6 +12,7 @@ class Usuario(Base):
     telefone = Column(String(15))
     endereco_completo = Column(String(200))
     senha_hash = Column(String(255), nullable=False)
+    profile_picture_url = Column(String, nullable=True)  # Caminho da foto de perfil
     # Atualização do grupo_política para string, já que o nome é uma chave candidata da tabela GrupoPolitica
     grupo_politica = Column(String(100), ForeignKey('grupo_politica.nome'), nullable=False, default="cliente")
 
